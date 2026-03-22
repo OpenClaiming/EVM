@@ -176,6 +176,50 @@ contract OpenClaiming {
 			)
 		);
 	}
+	
+	function verifySignatures(
+		bytes32 digest,
+		address[] calldata signers,
+		bytes[] calldata signatures,
+		uint256 minValid
+	) public pure returns (bool) {
+
+		if (signers.length != signatures.length) return false;
+
+		uint256 valid = 0;
+
+		// naive dedup (O(n^2), fine for small N)
+		for (uint256 i = 0; i < signers.length; i++) {
+
+			address signer = signers[i];
+			bytes calldata sig = signatures[i];
+
+			if (signer == address(0)) continue;
+			if (sig.length == 0) continue;
+
+			// dedupe check
+			bool duplicate = false;
+			for (uint256 j = 0; j < i; j++) {
+				if (signers[j] == signer) {
+					duplicate = true;
+					break;
+				}
+			}
+			if (duplicate) continue;
+
+			address recovered = recoverSigner(digest, sig);
+
+			if (recovered == signer) {
+				valid++;
+				if (valid >= minValid) return true;
+			}
+		}
+
+		if (minValid == 0) {
+			return false;
+		}
+		return valid >= minValid;
+	}
 
 	function paymentHashRecipients(address[] calldata recipients) public pure returns (bytes32) {
 		return keccak256(abi.encode(recipients));
@@ -215,6 +259,26 @@ contract OpenClaiming {
 		_paymentValidate(p, recipients, sig, line, recipient, amount);
 		return true;
 	}
+	
+	function paymentVerifySignatures(
+		Payment calldata p,
+		address[] calldata recipients,
+		uint256 line,
+		address recipient,
+		uint256 amount,
+		address[] calldata signers,
+		bytes[] calldata signatures,
+		uint256 minValid
+	) public view returns (bool) {
+
+		_paymentValidateCore(p, recipients, line, recipient, amount);
+
+		if (!verifySignatures(paymentDigest(p), signers, signatures, minValid)) {
+			return false;
+		}
+
+		return true;
+	}
 
 	function paymentExecute(
 		Payment calldata p,
@@ -239,6 +303,45 @@ contract OpenClaiming {
 			(bool ok, bytes memory data) = p.token.call(
 				abi.encodeWithSelector(IERC20.transferFrom.selector, p.payer, recipient, amount)
 			);
+			if (!ok || (data.length != 0 && !abi.decode(data,(bool)))) revert TransferFailed();
+		}
+
+		emit PaymentExecuted(p.payer,p.token,recipient,line,amount,l.spent);
+		return true;
+	}
+	
+	function paymentExecuteSignatures(
+		Payment calldata p,
+		address[] calldata recipients,
+		uint256 line,
+		address recipient,
+		uint256 amount,
+		address[] calldata signers,
+		bytes[] calldata signatures,
+		uint256 minValid
+	) public payable returns (bool) {
+
+		require(
+			paymentVerifySignatures(p, recipients, line, recipient, amount, signers, signatures, minValid),
+			"Invalid signatures"
+		);
+
+		Line storage l = lines[p.payer][line];
+		l.spent += amount;
+
+		if (p.token == address(0)) {
+			if (msg.sender != p.payer) revert NativeCoinDelegationUnsupported();
+			if (msg.value != amount) revert NativeCoinValueMismatch(amount, msg.value);
+
+			(bool ok,) = payable(recipient).call{value: amount}("");
+			if (!ok) revert TransferFailed();
+		} else {
+			if (msg.value != 0) revert NativeCoinValueMismatch(0, msg.value);
+
+			(bool ok, bytes memory data) = p.token.call(
+				abi.encodeWithSelector(IERC20.transferFrom.selector, p.payer, recipient, amount)
+			);
+
 			if (!ok || (data.length != 0 && !abi.decode(data,(bool)))) revert TransferFailed();
 		}
 
@@ -360,6 +463,23 @@ contract OpenClaiming {
 		_authorizationValidate(a, sig);
 		return true;
 	}
+	
+	function authorizationVerifySignatures(
+		Authorization calldata a,
+		address[] calldata signers,
+		bytes[] calldata signatures,
+		uint256 minValid
+	) public view returns (bool) {
+
+		if (a.nbf != 0 && block.timestamp < a.nbf) revert NotYetValid(a.nbf);
+		if (a.exp != 0 && block.timestamp > a.exp) revert Expired(a.exp);
+
+		if (!verifySignatures(authorizationDigest(a), signers, signatures, minValid)) {
+			return false;
+		}
+
+		return true;
+	}
 
 	// ================= INTERNAL =================
 
@@ -372,10 +492,27 @@ contract OpenClaiming {
 		uint256 amount
 	) internal view {
 
+		_paymentValidateCore(p, recipients, line, recipient, amount);
+
+		address signer = paymentRecoverSigner(p, sig);
+		if (signer != p.payer) revert PayerMismatch(p.payer, signer);
+	}
+	
+	function _paymentValidateCore(
+		Payment calldata p,
+		address[] calldata recipients,
+		uint256 line,
+		address recipient,
+		uint256 amount
+	) internal view {
+
 		if (line != p.line) revert PaymentLineMismatch(p.line, line);
 		if (p.nbf != 0 && block.timestamp < p.nbf) revert NotYetValid(p.nbf);
 		if (p.exp != 0 && block.timestamp > p.exp) revert Expired(p.exp);
-		if (paymentHashRecipients(recipients) != p.recipientsHash) revert PaymentRecipientsHashMismatch();
+
+		if (paymentHashRecipients(recipients) != p.recipientsHash) {
+			revert PaymentRecipientsHashMismatch();
+		}
 
 		bool allowed = false;
 		for (uint256 i = 0; i < recipients.length; i++) {
@@ -386,14 +523,19 @@ contract OpenClaiming {
 		}
 		if (!allowed) revert InvalidRecipient(recipient);
 
-		address signer = paymentRecoverSigner(p, sig);
-		if (signer != p.payer) revert PayerMismatch(p.payer, signer);
-
 		Line storage l = lines[p.payer][line];
 		if (!l.open) revert LineNotOpen(p.payer, line);
 
-		uint256 claimRemaining = p.max == 0 ? type(uint256).max : (l.spent >= p.max ? 0 : p.max - l.spent);
-		uint256 lineRemaining = l.max == 0 ? type(uint256).max : (l.spent >= l.max ? 0 : l.max - l.spent);
+		uint256 claimRemaining = p.max == 0
+			? type(uint256).max
+			: (l.spent >= p.max ? 0 : p.max - l.spent);
+
+		uint256 lineRemaining = l.max == 0
+			? type(uint256).max
+			: (l.spent >= l.max ? 0 : l.max - l.spent);
+			
+		uint256 available = claimRemaining < lineRemaining ? claimRemaining : lineRemaining;
+		if (available < amount) revert InsufficientCapacity(amount, available);
 
 		if (claimRemaining < amount) revert ClaimMaxExceeded(amount, claimRemaining);
 		if (lineRemaining < amount) revert LineMaxExceeded(amount, lineRemaining);
