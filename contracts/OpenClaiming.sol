@@ -20,11 +20,11 @@ Customer understands and acknowledges that the Software is being delivered as-is
 Customer agrees that neither Developer nor any other party has made any representations or warranties, nor has the Customer relied on any representations or warranties, express or implied, including any implied warranty of merchantability or fitness for any particular purpose with respect to the Software. Customer acknowledges that no affirmation of fact or statement (whether written or oral) made by Developer, its representatives, or any other party outside of this Agreement with respect to the Software shall be deemed to create any express or implied warranty on the part of Developer or its representatives.
 
 INDEMNIFICATION.
-Customer agrees to indemnify, defend and hold Developer and its officers, directors, employees, agents and contractors harmless from any loss, cost, expense (including attorney’s fees and expenses), associated with or related to any demand, claim, liability, damages or cause of action of any kind or character (collectively referred to as “claim”), in any manner arising out of or relating to any third party demand, dispute, mediation, arbitration, litigation, or any violation or breach of any provision of this Agreement by Customer.
+Customer agrees to indemnify, defend and hold Developer and its officers, directors, employees, agents and contractors harmless from any loss, cost, expense (including attorney's fees and expenses), associated with or related to any demand, claim, liability, damages or cause of action of any kind or character (collectively referred to as "claim"), in any manner arising out of or relating to any third party demand, dispute, mediation, arbitration, litigation, or any violation or breach of any provision of this Agreement by Customer.
 NO WARRANTY.
-THE SOFTWARE IS PROVIDED “AS IS” WITHOUT WARRANTY. DEVELOPER SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES FOR BREACH OF THE LIMITED WARRANTY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, DEVELOPER EXPRESSLY DISCLAIMS, AND CUSTOMER EXPRESSLY WAIVES, ALL OTHER WARRANTIES, WHETHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING WITHOUT LIMITATION ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR USE, OR ANY WARRANTY ARISING OUT OF ANY PROPOSAL, SPECIFICATION, OR SAMPLE, AS WELL AS ANY WARRANTIES THAT THE SOFTWARE (OR ANY ELEMENTS THEREOF) WILL ACHIEVE A PARTICULAR RESULT, OR WILL BE UNINTERRUPTED OR ERROR-FREE. THE TERM OF ANY IMPLIED WARRANTIES THAT CANNOT BE DISCLAIMED UNDER APPLICABLE LAW SHALL BE LIMITED TO THE DURATION OF THE FOREGOING EXPRESS WARRANTY PERIOD. SOME STATES DO NOT ALLOW THE EXCLUSION OF IMPLIED WARRANTIES AND/OR DO NOT ALLOW LIMITATIONS ON THE AMOUNT OF TIME AN IMPLIED WARRANTY LASTS, SO THE ABOVE LIMITATIONS MAY NOT APPLY TO CUSTOMER. THIS LIMITED WARRANTY GIVES CUSTOMER SPECIFIC LEGAL RIGHTS. CUSTOMER MAY HAVE OTHER RIGHTS WHICH VARY FROM STATE TO STATE. 
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY. DEVELOPER SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES FOR BREACH OF THE LIMITED WARRANTY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, DEVELOPER EXPRESSLY DISCLAIMS, AND CUSTOMER EXPRESSLY WAIVES, ALL OTHER WARRANTIES, WHETHER EXPRESSED, IMPLIED, OR STATUTORY, INCLUDING WITHOUT LIMITATION ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR USE, OR ANY WARRANTY ARISING OUT OF ANY PROPOSAL, SPECIFICATION, OR SAMPLE, AS WELL AS ANY WARRANTIES THAT THE SOFTWARE (OR ANY ELEMENTS THEREOF) WILL ACHIEVE A PARTICULAR RESULT, OR WILL BE UNINTERRUPTED OR ERROR-FREE. THE TERM OF ANY IMPLIED WARRANTIES THAT CANNOT BE DISCLAIMED UNDER APPLICABLE LAW SHALL BE LIMITED TO THE DURATION OF THE FOREGOING EXPRESS WARRANTY PERIOD. SOME STATES DO NOT ALLOW THE EXCLUSION OF IMPLIED WARRANTIES AND/OR DO NOT ALLOW LIMITATIONS ON THE AMOUNT OF TIME AN IMPLIED WARRANTY LASTS, SO THE ABOVE LIMITATIONS MAY NOT APPLY TO CUSTOMER. THIS LIMITED WARRANTY GIVES CUSTOMER SPECIFIC LEGAL RIGHTS. CUSTOMER MAY HAVE OTHER RIGHTS WHICH VARY FROM STATE TO STATE.
 
-LIMITATION OF LIABILITY. 
+LIMITATION OF LIABILITY.
 TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL DEVELOPER BE LIABLE UNDER ANY THEORY OF LIABILITY FOR ANY CONSEQUENTIAL, INDIRECT, INCIDENTAL, SPECIAL, PUNITIVE OR EXEMPLARY DAMAGES OF ANY KIND, INCLUDING, WITHOUT LIMITATION, DAMAGES ARISING FROM LOSS OF PROFITS, REVENUE, DATA OR USE, OR FROM INTERRUPTED COMMUNICATIONS OR DAMAGED DATA, OR FROM ANY DEFECT OR ERROR OR IN CONNECTION WITH CUSTOMER'S ACQUISITION OF SUBSTITUTE GOODS OR SERVICES OR MALFUNCTION OF THE SOFTWARE, OR ANY SUCH DAMAGES ARISING FROM BREACH OF CONTRACT OR WARRANTY OR FROM NEGLIGENCE OR STRICT LIABILITY, EVEN IF DEVELOPER OR ANY OTHER PERSON HAS BEEN ADVISED OR SHOULD KNOW OF THE POSSIBILITY OF SUCH DAMAGES, AND NOTWITHSTANDING THE FAILURE OF ANY REMEDY TO ACHIEVE ITS INTENDED PURPOSE. WITHOUT LIMITING THE FOREGOING OR ANY OTHER LIMITATION OF LIABILITY HEREIN, REGARDLESS OF THE FORM OF ACTION, WHETHER FOR BREACH OF CONTRACT, WARRANTY, NEGLIGENCE, STRICT LIABILITY IN TORT OR OTHERWISE, CUSTOMER'S EXCLUSIVE REMEDY AND THE TOTAL LIABILITY OF DEVELOPER OR ANY SUPPLIER OF SERVICES TO DEVELOPER FOR ANY CLAIMS ARISING IN ANY WAY IN CONNECTION WITH OR RELATED TO THIS AGREEMENT, THE SOFTWARE, FOR ANY CAUSE WHATSOEVER, SHALL NOT EXCEED 1,000 USD.
 
 TRADEMARKS.
@@ -47,7 +47,7 @@ SUCCESSORS AND ASSIGNS
 This Agreement shall continue to apply to any successors or assigns of either party, or any corporation or other entity acquiring all or substantially all the assets and business of either party whether by operation of law or otherwise.
 
 ARBITRATION
-All disputes related to this agreement shall be governed by and interpreted in accordance with the laws of New York, without regard to principles of conflict of laws. The parties to this agreement will submit all disputes arising under this agreement to arbitration in New York City, New York before a single arbitrator of the American Arbitration Association (“AAA”). The arbitrator shall be selected by application of the rules of the AAA, or by mutual agreement of the parties, except that such arbitrator shall be an attorney admitted to practice law New York. No party to this agreement will challenge the jurisdiction or venue provisions as provided in this section. No party to this agreement will challenge the jurisdiction or venue provisions as provided in this section.
+All disputes related to this agreement shall be governed by and interpreted in accordance with the laws of New York, without regard to principles of conflict of laws. The parties to this agreement will submit all disputes arising under this agreement to arbitration in New York City, New York before a single arbitrator of the American Arbitration Association ("AAA"). The arbitrator shall be selected by application of the rules of the AAA, or by mutual agreement of the parties, except that such arbitrator shall be an attorney admitted to practice law New York. No party to this agreement will challenge the jurisdiction or venue provisions as provided in this section. No party to this agreement will challenge the jurisdiction or venue provisions as provided in this section.
 **/
 
 /**
@@ -72,6 +72,26 @@ All disputes related to this agreement shall be governed by and interpreted in a
  *               signers each sign the same Action struct off-chain. The contract
  *               verifies all signatures, then forwards invoke() as the invoker
  *               and endorse() as each valid signer via EIP-2771.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * DEFAULT LINE (line 0)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Line 0 is the implicit default line. It is ALWAYS open and has an unlimited
+ * ceiling (max = 0). No call to lineOpen() is required to use line 0.
+ *
+ * Payment claims that use line 0 draw directly on the payer's ERC-20 balance
+ * and the ERC-20 allowance the payer has granted to this contract. The contract
+ * imposes no additional cap beyond the per-claim max field.
+ *
+ * Issuers who need budget isolation can open explicit named lines (line >= 1)
+ * via lineOpen() with a specific max. All lines — including line 0 — draw
+ * from the same underlying token balance; they are accounting buckets, not
+ * separate balances.
+ *
+ * Off-chain systems (Jets, Drops) independently pre-screen payer balances and
+ * ERC-20 allowances before accepting payment tokens, caching results in memory
+ * (default TTL: 1 hour). The definitive check is always on-chain at execution.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * EIP-712 MULTISIGNATURE MODEL
@@ -108,13 +128,14 @@ All disputes related to this agreement shall be governed by and interpreted in a
  * LINE ACCOUNTING
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * Payment lines are tracked here as:
- *   lines[payer][lineId] → { max, spent, open }
+ * Payment lines are tracked as: lines[payer][lineId] → { max, spent, open }
  *
- * A line must be opened (by the payer or its owner) before any payment claim
- * can execute against it. The claim's `max` field is a per-claim ceiling;
- * the line's `max` is an overall ceiling. Both are enforced independently.
- * Setting either max to 0 means unlimited for that level.
+ * Line 0 is always open with unlimited max (see DEFAULT LINE above).
+ * Lines >= 1 must be opened via lineOpen() before use.
+ *
+ * The claim's `max` field is a per-claim ceiling; the line's `max` is an
+ * overall ceiling. Both are enforced independently. Setting either to 0
+ * means unlimited at that level.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * REQUIRED CHANGES IN DEPENDENT CONTRACTS
@@ -204,6 +225,7 @@ contract OpenClaiming {
     error UnauthorizedLineOperator(address account, address caller);
 
     /// @notice The payment line has not been opened. Call lineOpen() first.
+    ///         Note: line 0 (DEFAULT_LINE) is always open and never raises this error.
     /// @param account The payer address.
     /// @param line    The line id.
     error LineNotOpen(address account, uint256 line);
@@ -302,19 +324,59 @@ contract OpenClaiming {
             "Action(address authority,address subject,address contractAddress,bytes4 method,bytes32 paramsHash,uint256 minimum,uint256 fraction,uint256 delay,uint256 nbf,uint256 exp)"
         );
 
+    // messages extension
+
+    /// @notice keccak256("OpenClaiming.messages") — name component of the
+    ///         messages domain separator.
+    bytes32 public constant MESSAGES_NAME_HASH =
+        keccak256(bytes("OpenClaiming.messages"));
+
+    /// @notice EIP-712 type hash for the MessageAssociation struct.
+    ///         Must match exactly in off-chain signers (JS/PHP) and on-chain.
+    bytes32 public constant MESSAGES_TYPEHASH =
+        keccak256(
+            "MessageAssociation(address account,bytes32 endpointType,bytes32 commitment)"
+        );
+
     /// @dev secp256k1 curve order divided by 2. Signatures with s > this value
     ///      are rejected to enforce low-s canonicality and prevent malleability.
     uint256 internal constant SECP256K1N_OVER_2 =
         0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0;
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Default line
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// @notice The default line ID (line 0).
+    ///
+    /// @dev Line 0 is always open and has an unlimited ceiling (max = 0).
+    ///      No call to lineOpen() is required to use it.
+    ///
+    ///      Payment claims using line 0 draw directly on the payer's:
+    ///        - ERC-20 balance
+    ///        - ERC-20 allowance granted to this contract
+    ///
+    ///      The contract imposes no additional cap beyond the per-claim max.
+    ///
+    ///      Lines >= 1 are optional budget-isolation buckets opened via lineOpen().
+    ///      All lines share the same underlying token balance.
+    uint256 public constant DEFAULT_LINE = 0;
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Structs
     // ─────────────────────────────────────────────────────────────────────────
 
-    /// @notice Tracks spending against a payment line.
+    /// @notice Tracks spending against an explicit payment line (line >= 1).
+    ///
+    /// @dev Line 0 is implicit and not stored here; it is always open with
+    ///      unlimited max. The spent counter for line 0 IS stored in the
+    ///      mapping at lines[payer][0] to enforce per-claim max ceilings —
+    ///      only the open flag is ignored for line 0.
+    ///
     /// @param max   Overall ceiling for this line. 0 = unlimited.
     /// @param spent Running total of all amounts paid out on this line.
     /// @param open  Whether the line is currently accepting payments.
+    ///              Always treated as true for line 0.
     struct Line {
         uint256 max;
         uint256 spent;
@@ -322,6 +384,7 @@ contract OpenClaiming {
     }
 
     /// @notice EIP-712 typed struct for a payment authorization.
+    ///
     /// @param payer          Address whose tokens will be transferred.
     /// @param token          ERC-20 token address. address(0) = native coin.
     /// @param recipientsHash keccak256(abi.encode(address[])) of the authorised
@@ -329,8 +392,12 @@ contract OpenClaiming {
     ///                       of addresses without storing them on-chain.
     /// @param max            Claim-level spending ceiling. 0 = unlimited.
     ///                       Combined with the line's own max; the lower wins.
-    /// @param line           Trustline bucket id. Must match an open Line entry
-    ///                       in lines[payer][line].
+    /// @param line           Trustline bucket id.
+    ///                       Use 0 (DEFAULT_LINE) for the always-open default line,
+    ///                       which draws on the payer's full token balance with no
+    ///                       contract-level cap beyond this claim's max.
+    ///                       Use >= 1 for explicitly budget-capped lines opened via
+    ///                       lineOpen(). All lines draw from the same token balance.
     /// @param nbf            Unix timestamp before which the claim is invalid.
     ///                       0 = no lower bound.
     /// @param exp            Unix timestamp after which the claim is invalid.
@@ -346,6 +413,7 @@ contract OpenClaiming {
     }
 
     /// @notice EIP-712 typed struct for an action authorization.
+    ///
     /// @param authority        Semantic authority behind the claim (iss).
     ///                         For governance actions this is typically the
     ///                         community treasury or multisig address.
@@ -379,7 +447,18 @@ contract OpenClaiming {
         uint256 exp;
     }
 
-    /// @notice Pre-flight result returned by preflight().
+    /// @notice EIP-712 typed struct for a messages endpoint association.
+    /// @param account      The address associating the endpoint.
+    /// @param endpointType keccak256 of the endpoint type string (e.g. keccak256("api")).
+    /// @param commitment   keccak256(abi.encodePacked(salt, url)). Salt=0 for public.
+    struct MessageAssociation {
+        address account;
+        bytes32 endpointType;
+        bytes32 commitment;
+    }
+
+    /// @notice Pre-flight result returned by paymentsPreFlight() and actionsPreFlight().
+    ///
     /// @param valid           True if all checked conditions pass.
     /// @param extension       "payments" or "actions".
     /// @param digest          The EIP-712 digest that was verified.
@@ -387,6 +466,7 @@ contract OpenClaiming {
     /// @param notYetValid     True if block.timestamp < nbf.
     /// @param expired         True if block.timestamp > exp.
     /// @param lineOpen        True if the payment line is open (payments only).
+    ///                        Always true for line 0.
     /// @param capacityOk      True if the line has sufficient capacity (payments only).
     struct PreflightResult {
         bool    valid;
@@ -404,7 +484,15 @@ contract OpenClaiming {
     // ─────────────────────────────────────────────────────────────────────────
 
     /// @notice Payment line state. lines[payer][lineId] → Line.
+    ///
+    /// @dev The open flag is only meaningful for lineId >= 1.
+    ///      Line 0 is always treated as open regardless of this mapping.
+    ///      The spent counter at lines[payer][0] is used to enforce per-claim
+    ///      max ceilings on DEFAULT_LINE payments.
     mapping(address => mapping(uint256 => Line)) public lines;
+
+    /// @notice messages[account][endpointType] → commitment
+    mapping(address => mapping(bytes32 => bytes32)) public messages;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Events
@@ -452,6 +540,16 @@ contract OpenClaiming {
         uint256 invokeID
     );
 
+    /// @notice Emitted after a successful message association.
+    /// @param account      The on-chain address being associated.
+    /// @param endpointType Can be keccak256("api"), keccak256("form"), keccak256("email"), etc.
+    /// @param commitment   The keccak hash of (salt + endpoint url). Salt=0 for public endpoints.
+    event MessagesAssociated(
+        address indexed account,
+        bytes32 indexed endpointType,
+        bytes32         commitment
+    );
+
     // ─────────────────────────────────────────────────────────────────────────
     // Line management
     // ─────────────────────────────────────────────────────────────────────────
@@ -463,10 +561,13 @@ contract OpenClaiming {
     ///      Calling lineOpen() on an already-open line updates the max without
     ///      resetting spent.
     ///
+    ///      Not needed for line 0 (the default, always-open line).
+    ///
     /// @param account  The payer address that will own the line.
-    /// @param line     An arbitrary uint256 used as the line id. Callers
-    ///                 should use distinct ids to separate payment buckets
-    ///                 (e.g. one per subscription, one per grant).
+    /// @param line     An arbitrary uint256 used as the line id. Use >= 1 for
+    ///                 explicit budget-capped lines. Line 0 is the always-open
+    ///                 default and calling lineOpen(account, 0, max) sets a
+    ///                 spending cap on the default line.
     /// @param max      Spending ceiling in token base units. 0 = unlimited.
     function lineOpen(address account, uint256 line, uint256 max) external {
         _requireLineOperator(account, msg.sender);
@@ -480,18 +581,44 @@ contract OpenClaiming {
     /// @dev spent is preserved — the history is not erased. Re-opening the
     ///      line with lineOpen() resumes from the existing spent total.
     ///
+    ///      Cannot close line 0 (DEFAULT_LINE). The default line is always
+    ///      open by protocol design.
+    ///
     /// @param account The payer address.
-    /// @param line    The line id to close.
+    /// @param line    The line id to close. Must be >= 1.
     function lineClose(address account, uint256 line) external {
+        require(line != DEFAULT_LINE, "OpenClaiming: cannot close default line");
         _requireLineOperator(account, msg.sender);
         lines[account][line].open = false;
         emit LineClosed(account, line);
     }
 
+    /// @notice Returns true if the given line is currently open for payments.
+    ///
+    /// @dev Line 0 always returns true regardless of storage state.
+    ///      Lines >= 1 return the stored open flag.
+    ///
+    /// @param account The payer address.
+    /// @param line    The line id to check.
+    /// @return        True if the line is open.
+    function lineIsOpen(address account, uint256 line) external view returns (bool) {
+        if (line == DEFAULT_LINE) return true;
+        return lines[account][line].open;
+    }
+
     /// @notice Returns the remaining spendable capacity on a line, taking
     ///         both the line-level max and a given claim-level max into account.
     ///
-    /// @dev Returns 0 if the line is closed. Does not revert.
+    /// @dev For line 0 (DEFAULT_LINE):
+    ///        - No line-level cap applies.
+    ///        - Returns claimMax (or type(uint256).max if claimMax == 0).
+    ///        - Off-chain callers should also check ERC-20 balance/allowance,
+    ///          since line 0 draws directly on the payer's token balance.
+    ///
+    ///      For lines >= 1:
+    ///        - Returns 0 if the line is closed.
+    ///        - Enforces both claim max and line max; the lower wins.
+    ///
     ///      Use this off-chain before constructing a payment claim to confirm
     ///      the line has sufficient capacity for the intended amount.
     ///
@@ -504,6 +631,10 @@ contract OpenClaiming {
         uint256 line,
         uint256 claimMax
     ) external view returns (uint256) {
+        if (line == DEFAULT_LINE) {
+            // No line-level cap. Only claim max applies.
+            return claimMax == 0 ? type(uint256).max : claimMax;
+        }
         Line storage l = lines[account][line];
         if (!l.open) return 0;
         uint256 claimRemaining = claimMax == 0
@@ -629,8 +760,9 @@ contract OpenClaiming {
     /// @dev Returns a PreflightResult struct summarising validity without
     ///      reverting. Intended for relayers and UIs to pre-flight claims,
     ///      estimate gas, and surface human-readable error states.
-    ///
     ///      Does NOT modify state. Safe to call at any time.
+    ///
+    ///      lineOpen is always true for line 0 (DEFAULT_LINE).
     ///
     /// @param p            The Payment struct to validate.
     /// @param recipients   The plaintext recipient array (must hash to p.recipientsHash).
@@ -649,25 +781,29 @@ contract OpenClaiming {
         bytes[]   calldata signatures,
         uint256            minValid
     ) external view returns (PreflightResult memory result) {
-        result.extension = "payments";
-        result.digest    = paymentsDigest(p);
-
+        result.extension   = "payments";
+        result.digest      = paymentsDigest(p);
         result.notYetValid = (p.nbf != 0 && block.timestamp < p.nbf);
         result.expired     = (p.exp != 0 && block.timestamp > p.exp);
 
-        Line storage l = lines[p.payer][p.line];
-        result.lineOpen = l.open;
+        // Line 0 is always open
+        result.lineOpen = (p.line == DEFAULT_LINE) ? true : lines[p.payer][p.line].open;
 
-        if (l.open) {
-            uint256 claimRemaining = p.max == 0
-                ? type(uint256).max
-                : (l.spent >= p.max ? 0 : p.max - l.spent);
-            uint256 lineRemaining = l.max == 0
-                ? type(uint256).max
-                : (l.spent >= l.max ? 0 : l.max - l.spent);
-            uint256 available = claimRemaining < lineRemaining
-                ? claimRemaining
-                : lineRemaining;
+        if (result.lineOpen) {
+            uint256 available;
+            if (p.line == DEFAULT_LINE) {
+                // No line cap — only claim max applies
+                available = p.max == 0 ? type(uint256).max : p.max;
+            } else {
+                Line storage l = lines[p.payer][p.line];
+                uint256 claimRemaining = p.max == 0
+                    ? type(uint256).max
+                    : (l.spent >= p.max ? 0 : p.max - l.spent);
+                uint256 lineRemaining = l.max == 0
+                    ? type(uint256).max
+                    : (l.spent >= l.max ? 0 : l.max - l.spent);
+                available = claimRemaining < lineRemaining ? claimRemaining : lineRemaining;
+            }
             result.capacityOk = (available >= amount);
         }
 
@@ -725,9 +861,8 @@ contract OpenClaiming {
         uint256            minValid,
         address            invoker
     ) external view returns (PreflightResult memory result) {
-        result.extension = "actions";
-        result.digest    = actionsDigest(a);
-
+        result.extension   = "actions";
+        result.digest      = actionsDigest(a);
         result.notYetValid = (a.nbf != 0 && block.timestamp < a.nbf);
         result.expired     = (a.exp != 0 && block.timestamp > a.exp);
 
@@ -735,7 +870,7 @@ contract OpenClaiming {
         result.lineOpen   = false;
         result.capacityOk = false;
 
-        bool paramsOk    = (keccak256(params) == a.paramsHash);
+        bool paramsOk     = (keccak256(params) == a.paramsHash);
         bool invokerFound = false;
 
         uint256 valid = 0;
@@ -1076,7 +1211,7 @@ contract OpenClaiming {
     ///      so _msgSender() inside ControlContract resolves to the invoker
     ///      and Community role checks pass.
     ///   5. Re-derive invokeID deterministically using the same formula as
-    ///      ControlContract.generateInvokeID(): 
+    ///      ControlContract.generateInvokeID():
     ///        keccak256(block.timestamp, block.prevrandao, invoker)
     ///      This works because ControlContract must use _msgSender() (= invoker)
     ///      not msg.sender (= this contract) in generateInvokeID().
@@ -1225,18 +1360,33 @@ contract OpenClaiming {
         }
         if (!allowed) revert InvalidRecipient(recipient);
 
-        Line storage l = lines[p.payer][p.line];
-        if (!l.open) revert LineNotOpen(p.payer, p.line);
+        // ── Line check ──────────────────────────────────────────────────────
+        // Line 0 (DEFAULT_LINE) is always open with unlimited max.
+        // All other lines must have been explicitly opened via lineOpen().
+        uint256 claimRemaining;
+        uint256 lineRemaining;
 
-        uint256 claimRemaining = p.max == 0
-            ? type(uint256).max
-            : (l.spent >= p.max ? 0 : p.max - l.spent);
-        uint256 lineRemaining = l.max == 0
-            ? type(uint256).max
-            : (l.spent >= l.max ? 0 : l.max - l.spent);
-        uint256 available = claimRemaining < lineRemaining
-            ? claimRemaining
-            : lineRemaining;
+        if (p.line == DEFAULT_LINE) {
+            // No line-level cap. Enforce only the per-claim max.
+            // spent is tracked at lines[p.payer][0] even for the default line.
+            uint256 spent = lines[p.payer][DEFAULT_LINE].spent;
+            claimRemaining = p.max == 0
+                ? type(uint256).max
+                : (spent >= p.max ? 0 : p.max - spent);
+            lineRemaining = type(uint256).max;
+        } else {
+            Line storage l = lines[p.payer][p.line];
+            if (!l.open) revert LineNotOpen(p.payer, p.line);
+
+            claimRemaining = p.max == 0
+                ? type(uint256).max
+                : (l.spent >= p.max ? 0 : p.max - l.spent);
+            lineRemaining = l.max == 0
+                ? type(uint256).max
+                : (l.spent >= l.max ? 0 : l.max - l.spent);
+        }
+
+        uint256 available = claimRemaining < lineRemaining ? claimRemaining : lineRemaining;
 
         if (amount > available)      revert InsufficientCapacity(amount, available);
         if (amount > claimRemaining) revert ClaimMaxExceeded(amount, claimRemaining);
@@ -1250,6 +1400,7 @@ contract OpenClaiming {
         uint256          amount,
         address          incomeContract
     ) internal {
+        // spent is tracked for both line 0 and named lines
         lines[p.payer][p.line].spent += amount;
 
         if (p.token == address(0)) {
@@ -1363,4 +1514,112 @@ contract OpenClaiming {
         }
         return string(h);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // messages — EIP-712 hash helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// @notice Returns the EIP-712 domain separator for the messages extension.
+    function messagesDomainSeparator() public view returns (bytes32) {
+        return keccak256(abi.encode(
+            EIP712_DOMAIN_TYPEHASH,
+            MESSAGES_NAME_HASH,
+            VERSION_HASH,
+            block.chainid,
+            address(this)
+        ));
+    }
+
+    /// @notice Compute the EIP-712 struct hash for a MessageAssociation.
+    /// @param m The MessageAssociation struct.
+    /// @return  The struct hash (before domain prefix).
+    function messagesHash(MessageAssociation calldata m) public pure returns (bytes32) {
+        return keccak256(abi.encode(
+            MESSAGES_TYPEHASH,
+            m.account,
+            m.endpointType,
+            m.commitment
+        ));
+    }
+
+    /// @notice Compute the final EIP-712 digest for a MessageAssociation.
+    ///         This is what the account must sign.
+    /// @param m The MessageAssociation struct.
+    /// @return  The digest: keccak256("\x19\x01" || domainSeparator || structHash)
+    function messagesDigest(MessageAssociation calldata m) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(
+            "\x19\x01",
+            messagesDomainSeparator(),
+            messagesHash(m)
+        ));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // messages — associate
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// @notice Direct path — msg.sender associates their own endpoint.
+    ///
+    /// @dev No signature required; msg.sender is authoritative.
+    ///      Use this when the account is calling on-chain directly.
+    ///
+    /// @param endpointType keccak256 of the endpoint type string (e.g. keccak256("api")).
+    /// @param commitment   keccak256(abi.encodePacked(salt, url)). Salt=0 for public endpoints.
+    function messagesAssociate(
+        bytes32 endpointType,
+        bytes32 commitment
+    ) external {
+        messages[msg.sender][endpointType] = commitment;
+        emit MessagesAssociated(msg.sender, endpointType, commitment);
+    }
+
+    /// @notice Relayed path — signer pre-signs EIP-712, anyone can submit.
+    ///
+    /// @dev Verifies the EIP-712 signature over the MessageAssociation struct,
+    ///      then stores the commitment on behalf of the signer. Enables
+    ///      gasless association flows where the account signs off-chain and
+    ///      a relayer submits the transaction.
+    ///
+    /// @param m   The MessageAssociation struct (account, endpointType, commitment).
+    /// @param sig 65-byte EIP-712 signature from m.account.
+    function messagesAssociateFor(
+        MessageAssociation calldata m,
+        bytes              calldata sig
+    ) external {
+        address signer = recoverSigner(messagesDigest(m), sig);
+        if (signer != m.account) revert InvalidSignature();
+        messages[m.account][m.endpointType] = m.commitment;
+        emit MessagesAssociated(m.account, m.endpointType, m.commitment);
+    }
+	
+	/// @notice Verify that an account has associated a given endpoint url with a given endpoint type.
+	///
+	/// @dev Recomputes keccak256(abi.encodePacked(salt, url)) and compares it against
+	///      the stored commitment. Two usage modes:
+	///
+	///      Public endpoint (salt = bytes32(0)):
+	///        Anyone can verify the url — no secret knowledge required.
+	///        commitment = keccak256(abi.encodePacked(bytes32(0), url))
+	///
+	///      Private endpoint (salt != bytes32(0)):
+	///        Only callers who know the salt can verify the url.
+	///        The on-chain commitment reveals nothing about the url without the salt.
+	///
+	///      Returns false (does not revert) if no association exists or if the
+	///      url/salt pair does not match the stored commitment.
+	///
+	/// @param account      The address whose endpoint association is being verified.
+	/// @param endpointType keccak256 of the endpoint type string (e.g. keccak256("api")).
+	/// @param salt         Blinding factor. bytes32(0) for public endpoints.
+	/// @param url          The plaintext endpoint url to verify against the commitment.
+	/// @return             True if the stored commitment matches keccak256(abi.encodePacked(salt, url)).
+	function messagesVerify(
+	    address account,
+	    bytes32 endpointType,
+	    bytes32 salt,
+	    string calldata url
+	) external view returns (bool) {
+	    bytes32 commitment = keccak256(abi.encodePacked(salt, url));
+	    return messages[account][endpointType] == commitment;
+	}
 }
